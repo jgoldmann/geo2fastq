@@ -36,4 +36,4 @@ for gse, info in Geo.search(search_term).items():
     
     if download:
         g = Geo(gse)
-        g.download()
+        g.download(gse)

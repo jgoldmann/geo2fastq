@@ -145,7 +145,6 @@ class Geo:
 
            
     def download(self, gsm="", outdir="./", format="fastq"):
- 
         outdir = os.path.join(outdir, self.gse)
         samples = self.samples.values()
         if gsm:
