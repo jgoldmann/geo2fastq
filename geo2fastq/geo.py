@@ -122,13 +122,14 @@ class Geo:
             ftp.retrlines('LIST', callback=lambda x: fnames.append(x.split(" ")[-1]))
             for fname in fnames:
                 local_name = os.path.join(outdir,fname)
-                sys.stderr.write("Downloading {0}...\n".format(local_name))
-                f = open(local_name, "w")
-                ftp.retrbinary(
-                               "RETR {0}".format(os.path.join(rootdir, dirname, fname)),
-                               f.write
-                               )
-                f.close()
+                if not os.path.exists(local_name):
+                    sys.stderr.write("Downloading {0}...\n".format(local_name))
+                    f = open(local_name, "w")
+                    ftp.retrbinary(
+                                   "RETR {0}".format(os.path.join(rootdir, dirname, fname)),
+                                   f.write
+                                   )
+                    f.close()
                 yield local_name
    
     def download_sra(self, sra_link, outdir="./"):
