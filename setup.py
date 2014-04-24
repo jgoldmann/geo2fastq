@@ -19,7 +19,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-setup (name = 'geo2fastq',
+setup(name = 'geo2fastq',
 	version = VERSION,
 	description = DESCRIPTION,
 	author='Simon van Heeringen',
@@ -32,11 +32,12 @@ setup (name = 'geo2fastq',
 		"scripts/geo2fastq",
 		"scripts/geo2trackhub",
 	],
-	
-    data_files=[
+     requires=[], #TODO list required packages here
+     platforms=["linux"],
+     data_files=[
         ('config', ["config/geo2fastq.yaml"]),
-    ],
-    #include_package_data=True,
-    tests_require=['pytest'],
-    cmdclass = {'test': PyTest},
+     ],
+     #include_package_data=True,
+     tests_require=['pytest'],
+     cmdclass = {'test': PyTest},
 )
