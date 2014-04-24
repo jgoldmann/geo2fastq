@@ -11,7 +11,7 @@ from geo2fastq.config import VERSION, config
 from geo2fastq import Geo
 from geo2fastq.convert import sra2fastq, fastq2bam, bam2bw
 
-MAXCPU = 4
+MAXCPU = 4 #FIXME put this in config file
 
 description = """
 geo2fastq v{0}
@@ -30,18 +30,32 @@ p.add_argument("-d", "--download",
                action="store_true",
                default=False,
                )
+p.add_argument("-fq", "--fastq",
+               dest="fastq",
+               help="Stop after converting download to fastq format.",
+               action="store_true",
+               default=False,
+              )
+p.add_argument("-bm", "--bam",
+               dest="bam",
+               help="Stop after mapping download to genome.",
+               action="store_true",
+               default=False,
+              )
+p.add_argument("-bw", "--bigwig",
+               dest="bigwig",
+               help="Stop after generating bigwig visualization of mapped sample.",
+               action="store_true",
+               default=False,
+              )
+
 
 args = p.parse_args()
-
-download = args.download
+download    = args.download
+fastq       = args.fastq
+bam         = args.bam
+bigwig      = args.bigwig
 search_term = args.term
-
-keep = {
-    "sra": True,
-    "bam": True,
-    "fastq": True,
-    "bw": True
-}
 
 config = config()
 
@@ -83,44 +97,50 @@ for gse, info in Geo.search(search_term).items():
             bam = os.path.join(gse, "{0}.{1}.bam".format(sample['gsm'], name))
             
             # Mapping the fastq file
-            aligner = config['aligner'].setdefault(sample['library'], config['aligner']['default'])
-            genome_dir = config['genome_dir']
-            try:
-                genome = config['genome_build'][sample['tax_id']]
-            except:
-                sys.stderr.write("No genome_build specified for tax_id {0}".format(sample['tax_id']))
-                sys.exit(1)
+            if not fastq:
+                aligner = config['aligner'].setdefault(sample['library'], config['aligner']['default'])
+                genome_dir = config['genome_dir']
+                try:
+                    genome = config['genome_build'][sample['tax_id']]
+                except:
+                    sys.stderr.write("No genome_build specified for tax_id {0}".format(sample['tax_id']))
+                    sys.exit(1)
             
-            sys.stderr.write("Mapping {0} to {1} with {3} to {4} -> {2}\n".format(
-                                                                sample['gsm'],
-                                                                genome,
-                                                                bam,
-                                                                aligner,
-                                                                genome,
-                                                                )
-                                                                )
-            fastq2bam(fqs, bam, genome, aligner=aligner, genome_dir=genome_dir) 
+                sys.stderr.write("Mapping {0} to {1} with {3} to {4} -> {2}\n".format(
+                                                                    sample['gsm'],
+                                                                    genome,
+                                                                    bam,
+                                                                    aligner,
+                                                                    genome,
+                                                                    )
+                                )
+                fastq2bam(fqs, bam, genome, aligner=aligner, genome_dir=genome_dir) 
             
-            # bigWig conversion
-            # No dependencies, so can be run in seperate process
-            bw = bam.replace(".bam", ".bw")
-            p_bw = Process(target=bam2bw, args=(bam, bw,))
-            sys.stderr.write("Creating bigWig from {0}".format(bam)) 
-            p_bw.start()
-            jobs.append(p_bw)
+                # bigWig conversion
+                if not bam:
+                    # No dependencies, so can be run in seperate process
+                    bw = bam.replace(".bam", ".bw")
+                    p_bw = Process(target=bam2bw, args=(bam, bw,))
+                    sys.stderr.write("Creating bigWig from {0}".format(bam)) 
+                    p_bw.start()
+                    jobs.append(p_bw)
+                
+                # Wait for termination of download process
+            p.join()
         
-        # Wait for termination of download process
-        p.join()
-        
-        # Wait for remaining bigwig conversions 
-        for p_bw in jobs:
-            p_bw.join()
-
-
-#            #if stderr:
-#            #    sys.stderr.write("bam2bw failed\n")
-#            #    sys.stderr.write("{0}\n".format(stderr))
-#
-#        create_hub(gse, samples, "/home/simon/dat/trackhubs", "simon", "localhost", "s.vanheeringen@ncmls.ru.nl")
-#
-
+            # Wait for remaining bigwig conversions 
+            if not bam:
+                for p_bw in jobs:
+                    p_bw.join()
+                
+            # trackhub conversion
+            if not bigwig:
+                print "trackhub creation not implemented yet"
+                
+#                #if stderr:
+#                #    sys.stderr.write("bam2bw failed\n")
+#                #    sys.stderr.write("{0}\n".format(stderr))
+#   
+#            create_hub(gse, samples, "/home/simon/dat/trackhubs", "simon", "localhost", "s.vanheeringen@ncmls.ru.nl")
+#   
+    

@@ -29,7 +29,6 @@ setup(name = 'geo2fastq',
 		'geo2fastq'
 	],
 	scripts=[
-		"scripts/geo2fastq",
 		"scripts/geo2trackhub",
 	],
      requires=[], #TODO list required packages here

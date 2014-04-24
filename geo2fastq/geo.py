@@ -144,18 +144,17 @@ class Geo:
 
            
     def download(self, gsm="", outdir="./"):
-        print "entering g.download generator"
         outdir = os.path.join(outdir, self.gse)
         samples = self.samples.values()
         if gsm:
-            if not self.samples.has_key(gsm):
+            if not self.samples.has_key[gsm]:
                 raise Exception
             samples = [self.samples[gsm]]        
         for sample in samples:
             fnames = []
             for fname in self._download_sample(sample, outdir=outdir):
                 fnames.append(fname)
-#                yield sample, fnames
+            yield sample, fnames
 
     def _download_sample(self, sample, outdir="."):
         for sra_link in sample['sra']:
