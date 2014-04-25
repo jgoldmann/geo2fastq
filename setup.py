@@ -38,6 +38,5 @@ setup(name = 'geo2fastq',
         ('config', ["config/geo2fastq.yaml"]),
      ],
      #include_package_data=True,
-     tests_require=['pytest'],
      cmdclass = {'test': PyTest},
 )
