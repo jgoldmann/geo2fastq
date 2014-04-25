@@ -1,5 +1,4 @@
-from distutils.core import setup
-from setuptools.command.test import test as TestCommand
+from distutils.core import setup, Command
 import sys
 from geo2fastq.config import VERSION
 
@@ -7,16 +6,18 @@ DESCRIPTION = """
 Download GEO sequencing experiments and process to map and create track hubs.
 """
 
-class PyTest(TestCommand):
+class PyTest(Command):
+    user_options = []
+    def initialize_options(self):
+        pass
+
     def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.test_args)
-        sys.exit(errno)
+        pass
+        
+    def run(self):
+        import sys,subprocess
+        errno = subprocess.call([sys.executable, 'runtests.py'])
+        raise SystemExit(errno)
 
 
 setup(name = 'geo2fastq',
