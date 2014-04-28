@@ -50,6 +50,14 @@ def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
             sys.exit(1)
 
 def sra2fastq(sra, name, outdir=".", keep_sra=False):
+    """ Convert an sra file to a fastq file. Returns a list of the fastq filenames.
+    :param sra Filename of the .sra file.
+    :type sra string
+    :param name GSM identifier of the sample to convert.
+    :type name string
+    :param outdir Directory store the fastq files in.
+    :type outdir string
+    """
     try:
         FASTQ_DUMP = "fastq-dump"
         cmd = "{0} --split-files --gzip {1} -O {2}".format(

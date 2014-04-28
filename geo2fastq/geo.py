@@ -158,6 +158,12 @@ class Geo:
             yield sample, fnames
 
     def _download_sample(self, sample, outdir="."):
+        """ Download a sample of the Geo object. Returns the filename.
+        :params sample The GSM identifier of the sample to download.
+        :type sample string
+        :params outdir The directory path to save the downloaded file in.
+        :sample outdir string
+        """
         for sra_link in sample['sra']:
             for fname in self.download_sra(sra_link, outdir):
                 yield fname

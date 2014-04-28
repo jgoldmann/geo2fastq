@@ -1,6 +1,8 @@
 from geo2fastq import Geo
 import os
 import shutil
+from geo2fastq.convert import sra2fastq, fastq2bam, bam2bw
+
 
 class TestClass:
     def test_Geo_search(self):
@@ -29,12 +31,32 @@ class TestClass:
         if files_present_before:
             shutil.rmtree("./GSE14025")
             
-        fname_generator = g.download()
+        fname_generator = g.download() #takes about 20 minutes
         for sample, fname in fname_generator:
             for path in fname:
                 assert(os.path.exists(path))
                 
         if not files_present_before:
             shutil.rmtree("./GSE14025")
-        
+       
+       
+    def test_sra2fastq(self):
+        gse = 'GSE14025'
+        g = Geo(gse)
+        sample = g.samples[g.samples.keys()[1]]
+        sra_fname = g._download_sample(sample)
+        fqs = sra2fastq(sra_fname, 
+                        sample['gsm'], 
+                        gse)
+        for fq in fqs:
+            assert(os.path.exists(fq))
+        # do not delete the output file at this stage
+      
+      
+   def test_fastq2bam():
+       pass
+       
+
+
+
 
