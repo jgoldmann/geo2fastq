@@ -1,4 +1,4 @@
-genome_dir: /usr/share/genomes
+genome_dir: /data/genomes
 
 aligner:
         default: bwa
@@ -6,7 +6,7 @@ aligner:
         ChIP-Seq: bwa
 
 genome_build:
-        8364:   xenTro3
+        8364:   xenTro3beta
         7955:   danRer7
         9606:   hg19
         10090:  mm10

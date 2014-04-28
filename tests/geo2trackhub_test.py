@@ -2,6 +2,12 @@ from geo2fastq import Geo
 import os
 import shutil
 from geo2fastq.convert import sra2fastq, fastq2bam, bam2bw
+from geo2fastq.config import config
+import glob
+import re
+
+
+config = config()
 
 
 class TestClass:
@@ -44,7 +50,7 @@ class TestClass:
         gse = 'GSE14025'
         g = Geo(gse)
         sample = g.samples[g.samples.keys()[1]]
-        sra_fname = g._download_sample(sample)
+        sra_fname = g._download_sample(sample).next()
         fqs = sra2fastq(sra_fname, 
                         sample['gsm'], 
                         gse)
@@ -53,8 +59,34 @@ class TestClass:
         # do not delete the output file at this stage
       
       
-   def test_fastq2bam():
-       pass
+    def test_fastq2bam(self):
+        gse = 'GSE14025'
+        g = Geo(gse)
+        sample = g.samples[g.samples.keys()[1]]
+        fqs = glob.glob(os.path.join(gse, "*{0}*.fq.gz".format(sample['gsm'])))
+        name = re.sub(r'[^a-zA-Z1-9_-]', "", sample['name'])
+        bam = os.path.join(gse, "{0}.{1}.bam".format(sample['gsm'], name))
+        aligner = config['aligner'].setdefault(sample['library'], config['aligner']['default'])
+        genome_dir = config['genome_dir']
+        genome = config['genome_build'][sample['tax_id']] 
+        #TODO: in future, test with some less exotic genome (now xenTro3beta)
+        fastq2bam(fqs, bam, genome, aligner, genome_dir)
+        assert(os.path.exists(bam))
+        assert(os.path.exists("{0}.bai".format(bam)))
+        for fq in fqs:
+            os.unlink(fq)
+        
+        
+    def test_bam2bw(self):
+        gse = 'GSE14025'
+        g = Geo(gse)
+        sample = g.samples[g.samples.keys()[1]]
+        bam = 'GSE14025/GSM352202.H3K4me3_ChIPSeq.bam' 
+        bw = bam.replace(".bam", ".bw")
+        
+        bam2bw(bam, bw, library=sample['library']) # not functional yet!
+        assert(os.path.exists(bw))
+    
        
 
 

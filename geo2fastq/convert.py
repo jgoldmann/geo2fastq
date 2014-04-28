@@ -5,9 +5,24 @@ import os
 import subprocess
 import glob
  
-ALIGN_CMD = "/home/simon/git/soladmin/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}"
+ALIGN_CMD = "/opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}"
+#TODO: parameterize this
 
 def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
+    """Map fastq reads to the genome and generate a bam file.
+    :param fqs List of fastq filenames.
+    :type  fqs list
+    :param bam Path to the bam file to generate.
+    :type  bam string
+    :param genome Genome name to map reads to (as defined in the configfile).
+    :type  genome string
+    :param aligner Alignment program (as defined in the configfile).
+    :type  aligner string
+    :param genome_dir Directory of the genome files for the mapper (as definced in configfile).
+    :type  genome_dir string
+    :param force Re-map even if bamfiles exist already. Defaults to False.
+    :type  force boolean
+    """
     bams = [] 
     
     if os.path.exists(bam) and not force:
@@ -20,8 +35,14 @@ def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
         cmd = ALIGN_CMD.format(fq, bname, genome, aligner, genome_dir)
 
         sys.stderr.write("Mapping {0} to {1}\n".format(fq, genome))
-        p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        p = subprocess.Popen(cmd, 
+                             shell=True, 
+                             stderr=subprocess.PIPE, 
+                             stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
+        #sys.stdout.write(stdout)
+        if stderr:
+            raise Exception(stderr)
         
         if not os.path.exists("{0}.bam".format(bname)):
             sys.stderr.write("Alignment failed\n")
@@ -49,6 +70,7 @@ def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
             sys.stderr.write("Merging failed!\n")
             sys.exit(1)
 
+
 def sra2fastq(sra, name, outdir=".", keep_sra=False):
     """ Convert an sra file to a fastq file. Returns a list of the fastq filenames.
     :param sra Filename of the .sra file.
@@ -65,8 +87,7 @@ def sra2fastq(sra, name, outdir=".", keep_sra=False):
                                                   sra,
                                                   outdir,
                                                   )
-    
-        
+           
         p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if stderr:
@@ -96,8 +117,15 @@ def sra2fastq(sra, name, outdir=".", keep_sra=False):
         sys.stderr.write("{0}\n".format(e))
         return []
 
+
 def bam2bw(bam, bw, library=None, force=False):
     """ Convert bam to UCSC bigWig 
+    :param bam Path to the bam file.
+    :type  bam string
+    :param bw Path to output bigwig file.
+    :type  bw string
+    :param library Library of the sample (e.g. 'RNA-seq' or 'Chip_seq')
+    :type  library string
     """
     # Don't overwrite existing bigWig if not explicitly stated
     if os.path.exists(bw) and not force:
