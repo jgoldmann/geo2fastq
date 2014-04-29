@@ -6,7 +6,6 @@ from geo2fastq.config import config
 import glob
 import re
 
-
 config = config()
 
 

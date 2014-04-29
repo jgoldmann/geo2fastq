@@ -6,7 +6,7 @@ from trackhub import Hub, GenomesFile, Genome, TrackDb, Track
 from trackhub.upload import upload_track, upload_hub
 from trackhub.helpers import show_rendered_files
 
-HUB_URLBASE = 'http://mbpcsimon.azn.nl/trackhubs'
+HUB_URLBASE = 'http://mbpcsimon.azn.nl/trackhubs' #TODO: parameterize this
 
 def create_hub(geo, email=None, upload=False, upload_dir=".", user=None, host=None):
     """ Create an UCSC track hub from a Geo object

@@ -4,6 +4,7 @@ import re
 import os
 import subprocess
 import glob
+import shutil
  
 ALIGN_CMD = "/opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}"
 #TODO: parameterize this
@@ -30,19 +31,22 @@ def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
         return
 
     for fq in fqs:
-        bname = fq.replace(".fq.gz", "")
+        #first, map to intermediate bams
+        bname = fq.replace(".fq.gz", "") 
+        if os.path.exists(bname+".bam"):
+            os.unlink(bname+".bam")
+        
+        #delete temporary directory of the bwa mapper
+        if os.path.exists(bname):
+            shutil.rmtree(bname)
         
         cmd = ALIGN_CMD.format(fq, bname, genome, aligner, genome_dir)
-
         sys.stderr.write("Mapping {0} to {1}\n".format(fq, genome))
         p = subprocess.Popen(cmd, 
                              shell=True, 
                              stderr=subprocess.PIPE, 
                              stdout=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        #sys.stdout.write(stdout)
-        if stderr:
-            raise Exception(stderr)
+        stdout, stderr = p.communicate() #bwa gives a lot of routine messages on stdout, so don't check for it
         
         if not os.path.exists("{0}.bam".format(bname)):
             sys.stderr.write("Alignment failed\n")
