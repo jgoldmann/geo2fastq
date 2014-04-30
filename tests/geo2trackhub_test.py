@@ -59,6 +59,7 @@ class TestClass:
       
       
     def test_fastq2bam(self):
+        # depends on test_sra2fastq
         gse = 'GSE14025'
         g = Geo(gse)
         sample = g.samples[g.samples.keys()[1]]
@@ -77,13 +78,14 @@ class TestClass:
         
         
     def test_bam2bw(self):
+        # depends on test_fastq2bam
         gse = 'GSE14025'
         g = Geo(gse)
         sample = g.samples[g.samples.keys()[1]]
         bam = 'GSE14025/GSM352202.H3K4me3_ChIPSeq.bam' 
         bw = bam.replace(".bam", ".bw")
         
-        bam2bw(bam, bw, library=sample['library']) # not functional yet!
+        bam2bw(bam, bw, library=sample['library']) 
         assert(os.path.exists(bw))
     
        
