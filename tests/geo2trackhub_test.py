@@ -69,8 +69,9 @@ class TestClass:
         aligner = config['aligner'].setdefault(sample['library'], config['aligner']['default'])
         genome_dir = config['genome_dir']
         genome = config['genome_build'][sample['tax_id']] 
+        algn_cmd = config['ALIGN_CMD']
         #TODO: in future, test with some less exotic genome (now xenTro3beta)
-        fastq2bam(fqs, bam, genome, aligner, genome_dir)
+        fastq2bam(fqs, bam, genome, aligner, genome_dir, algn_cmd)
         assert(os.path.exists(bam))
         assert(os.path.exists("{0}.bai".format(bam)))
         for fq in fqs:

@@ -1,10 +1,16 @@
-genome_dir: /data/genomes
+###########################################
+# geo2fastq configuration file
+# adapt these settings for your environment
+###########################################
 
-aligner:
-        default: bwa
-        RNA-Seq: gsnap
-        ChIP-Seq: bwa
+# genome files ---------------------------
 
+#Path where you keep genome files #TODO: describe formats + sources
+genome_dir: /data/genomes 
+
+# Define, what genome assembly you want to use for what organism. Give 
+# it as taxonimc_id: genomeAssembly. Genome assembly names must match 
+# with the folder names in you genome_dir location.
 genome_build:
         8364:   xenTro3beta
         7955:   danRer7
@@ -12,3 +18,23 @@ genome_build:
         10090:  mm10
         10116:  rn4
         8355:   XENLA_JGIv7b
+
+
+# data conversion -----------------------
+
+# Alignment program to use for mapping.
+aligner:
+        default: bwa
+        RNA-Seq: gsnap
+        ChIP-Seq: bwa
+
+# Command structure for the alignment wrapper. 
+#FIXME needs some more elegant solution
+ALIGN_CMD: /opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}
+
+
+# trackhub uploads --------------------
+
+HUB_URLBASE: http://mbpcsimon.azn.nl/trackhubs
+
+
