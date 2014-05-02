@@ -6,10 +6,7 @@ import subprocess
 import glob
 import shutil
  
-ALIGN_CMD = "/opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}"
-#TODO: parameterize this
-
-def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
+def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", algn_cmd, force=False):
     """Map fastq reads to the genome and generate a bam file.
     :param fqs List of fastq filenames.
     :type  fqs list
@@ -21,6 +18,8 @@ def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
     :type  aligner string
     :param genome_dir Directory of the genome files for the mapper (as definced in configfile).
     :type  genome_dir string
+    :param algn_cmd Command structure for the alignment wrapper.
+    :type  algn_cmd string
     :param force Re-map even if bamfiles exist already. Defaults to False.
     :type  force boolean
     """
@@ -40,7 +39,7 @@ def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", force=False):
         if os.path.exists(bname):
             shutil.rmtree(bname)
         
-        cmd = ALIGN_CMD.format(fq, bname, genome, aligner, genome_dir)
+        cmd = algn_cmd.format(fq, bname, genome, aligner, genome_dir)
         sys.stderr.write("Mapping {0} to {1}\n".format(fq, genome))
         p = subprocess.Popen(cmd, 
                              shell=True, 
