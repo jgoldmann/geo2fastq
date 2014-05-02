@@ -8,7 +8,7 @@ import yaml
 from multiprocessing import Process, Queue
 
 from geo2fastq.config import VERSION, config
-from geo2fastq import Geo
+from geo2fastq import Geo, check_sra
 from geo2fastq.convert import sra2fastq, fastq2bam, bam2bw
 
 MAXCPU = 4 #FIXME put this in config file
@@ -87,6 +87,9 @@ for gse, info in Geo.search(search_term).items():
             sample, sras = result
             
             for sra in sras:
+                if not check_sra(sra):
+                    sys.stderr.write("Downloaded sra file {0} seems not intact.".format(sra))
+                    sys.exit(1)
                 sys.stderr.write("Converting {0} to fastq\n".format(sra))
                 sra2fastq(sra, sample['gsm'], gse)
 
