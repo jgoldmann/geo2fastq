@@ -6,7 +6,7 @@ import subprocess
 import glob
 import shutil
  
-def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", algn_cmd, force=False):
+def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", algn_cmd="", force=False):
     """Map fastq reads to the genome and generate a bam file.
     :param fqs List of fastq filenames.
     :type  fqs list
