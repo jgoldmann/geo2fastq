@@ -63,7 +63,7 @@ class Geo:
         :param term: search term(s)
         :type term: string
         """
-        Entrez.email = "s.vanheeringen@ncmls.ru.nl"      
+        Entrez.email = "s.vanheeringen@ncmls.ru.nl"  #TODO: parameterize
         handle = Entrez.esearch("gds", term)
         record = Entrez.read(handle)
         results = {}

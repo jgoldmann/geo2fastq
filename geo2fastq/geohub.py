@@ -7,7 +7,7 @@ from trackhub.upload import upload_track, upload_hub
 from trackhub.helpers import show_rendered_files
 
 
-def create_hub(geo, email=None, upload=False, upload_dir=".", user=None, host=None, hub_urlbase):
+def create_hub(geo, email=None, upload=False, upload_dir=".", user=None, host=None, hub_urlbase="./"):
     """ Create an UCSC track hub from a Geo object
     """
     hub = Hub(
