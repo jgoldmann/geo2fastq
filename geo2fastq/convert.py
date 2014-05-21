@@ -5,7 +5,27 @@ import os
 import subprocess
 import glob
 import shutil
- 
+import subprocess as sp
+
+def check_sra(sra):
+    """Check an sra file for sanity.
+    :param sra Path to sra file.
+    :type  sra string
+    :returns boolean to indicate sanity."""
+    cmd = "vdb-validate {0}"
+    p = sp.Popen(cmd.format(sra),
+                 stdout=sp.PIPE,
+                 stderr=sp.PIPE,
+                 shell=True)
+    stdout, stderr = p.communicate()
+    message = stderr
+    ok = []
+    for line in message.splitlines():
+        ok.append(line.endswith('ok') or line.endswith("consistent"))
+    return not (False in ok)    
+
+
+
 def fastq2bam(fqs, bam, genome, aligner="", genome_dir="", algn_cmd="", force=False):
     """Map fastq reads to the genome and generate a bam file.
     :param fqs List of fastq filenames.

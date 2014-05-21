@@ -7,31 +7,12 @@ import gzip
 from ftplib import FTP
 import re
 import os
-import subprocess as sp
 from collections import defaultdict
 import pickle
 from geo2fastq.convert import sra2fastq
 
 GEOFTP_URLBASE = "ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/by_series/{0}/{0}_family.soft.gz"
 FTP_ROOT = "ftp-trace.ncbi.nlm.nih.gov"
-
-
-def check_sra(sra):
-    """Check an sra file for sanity.
-    :param sra Path to sra file.
-    :type  sra string
-    :returns boolean to indicate sanity."""
-    cmd = "vdb-validate {0}"
-    p = sp.Popen(cmd.format(sra),
-                 stdout=sp.PIPE,
-                 stderr=sp.PIPE,
-                 shell=True)
-    stdout, stderr = p.communicate()
-    message = stderr
-    ok = []
-    for line in message.splitlines():
-        ok.append(line.endswith('ok') or line.endswith("consistent"))
-    return not (False in ok)    
 
 
 class Geo:
