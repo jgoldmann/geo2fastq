@@ -8,7 +8,7 @@ import yaml
 from multiprocessing import Process, Queue
 from geo2fastq.config import VERSION, config
 from geo2fastq import Geo
-from geo2fastq.convert import sra2fastq, fastq2bam, bam2bw, check_sra
+from geo2fastq.convert import *
 
 
 description = """
