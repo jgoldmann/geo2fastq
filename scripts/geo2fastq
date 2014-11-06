@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+import argparse
+import sys
+from multiprocessing import Process, Queue
+from geo2fastq.config import VERSION, config
+from geo2fastq import Geo
+
+
+description = """
+geo2fastq v{0}
+""".format(VERSION)
+
+p = argparse.ArgumentParser(
+                           description=description,
+                           )
+p.add_argument("term",
+               help="GEO search term (accession)",
+               metavar="TERM"
+               )
+p.add_argument("-d", "--download",
+               dest="download",
+               help="Download data from GEO. If this option is not specified, only show metadata.",
+               action="store_true",
+               default=False,
+               )
+              
+
+args = p.parse_args()
+download    = args.download
+fastq       = args.fastq
+bam         = args.bam
+bigwig      = args.bigwig
+search_term = args.term
+
+config = config()
+
+
+for gse, info in Geo.search(search_term).items():
+    print "{0}\t{1}".format(gse, info['title'])
+    for gsm,title in info['samples'].items():
+        print "  {0}\t{1}".format(gsm, title)
+    
+    if download:
+        
+        def put_things_in_queue(gen, q):
+            for result in gen():
+                q.put(result)
+            q.put("done")
+        
+        q = Queue()
+        
+        # Get GEO info
+        g = Geo(gse)
+        # Download samples
+        p = Process(target=put_things_in_queue, args=(g.download, q,))
+        p.start()
+        
+        jobs = []
+        while 1:
+            result = q.get()
+            if result == "done":
+                break
+            sample, sras = result
+            
+#            for sra in sras:
+#                if not check_sra(sra):
+#                    sys.stderr.write("Downloaded sra file {0} seems not intact.".format(sra))
+#                    sys.exit(1)
+#                sys.stderr.write("Converting {0} to fastq\n".format(sra))
+#                sra2fastq(sra, sample['gsm'], gse)
+            
+            g.check_sras() #does this generator start by itself?
+            g.sras2fastqs()
+            
+

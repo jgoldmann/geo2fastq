@@ -7,9 +7,8 @@ import gzip
 from ftplib import FTP
 import re
 import os
-from collections import defaultdict
-import pickle
-from geo2fastq.convert import sra2fastq
+import subprocess as sp
+import glob
 
 GEOFTP_URLBASE = "ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/by_series/{0}/{0}_family.soft.gz"
 FTP_ROOT = "ftp-trace.ncbi.nlm.nih.gov"
@@ -131,7 +130,7 @@ class Geo:
                     f.close()
                 yield local_name
    
-    def download_sra(self, sra_link, outdir="./"):
+    def download_sra(self, sra_link, outdir="./", gsm):
         p = re.compile(r'term=(\w+)')
         m = p.search(sra_link)
         if m:
@@ -145,16 +144,25 @@ class Geo:
            
     def download(self, gsm="", outdir="./"):
         outdir = os.path.join(outdir, self.gse)
-        samples = self.samples.values()
+        #samples = self.samples.values()
         if gsm:
             if not self.samples.has_key[gsm]:
                 raise Exception
-            samples = [self.samples[gsm]]        
-        for sample in samples:
+#            samples = [self.samples[gsm]]        
+#        for sample in samples:
+#            fnames = []
+#            for fname in self._download_sample(sample, outdir=outdir):
+#                fnames.append(fname)
+#            yield sample, fnames
+        for i in len(self.samples[gsm]):
+            sample = self.samples[gsm][i]
+            self.samples[gsm][i].sra_files = []
             fnames = []
             for fname in self._download_sample(sample, outdir=outdir):
-                fnames.append(fname)
+                self.samples[gsm][i].sra_files.append(fname)
+                fnames.append(fname) #probably outdated
             yield sample, fnames
+
 
     def _download_sample(self, sample, outdir="."):
         """ Download a sample of the Geo object. Returns the filename.
@@ -164,7 +172,7 @@ class Geo:
         :sample outdir string
         """
         for sra_link in sample['sra']:
-            for fname in self.download_sra(sra_link, outdir):
+            for fname in self.download_sra(sra_link, outdir, gsm=sample['gsm']):
                 yield fname
 
     def _soft_read(self, fh):
@@ -184,6 +192,87 @@ class Geo:
             except:
                 pass
         return soft
+
+        
+    def check_sras(self):
+        """Check the SRA files of all samples for sanity."""
+        for sample in self.samples:
+            for sra_file in sample.sra_files:
+                yield self._check_sra(sra_file)
+    
+    
+    def _check_sra(self, sra):
+        """Check an sra file for sanity.
+        :param sra Path to sra file.
+        :type  sra string
+        :returns boolean to indicate sanity."""
+        cmd = "vdb-validate {0}"
+        p = sp.Popen(cmd.format(sra),
+                     stdout=sp.PIPE,
+                     stderr=sp.PIPE,
+                     shell=True)
+        stdout, stderr = p.communicate()
+        message = stderr
+        ok = []
+        for line in message.splitlines():
+            ok.append(line.endswith('ok') or line.endswith("consistent"))
+        return not (False in ok)
+        
+    
+    def sras2fastqs(self):
+        """Convert the sra files of all samples to fastq files."""
+        for sample in self.samples:
+            for sra_file in sample.sra_files:
+                yield self._sra2fastq(sra=sra_file, name=sample.name)
+
+    
+    def _sra2fastq(sra, name, outdir=".", keep_sra=False):
+        """Convert an sra file to a fastq file. Returns a list of the fastq filenames.
+        :param sra Filename of the .sra file.
+        :type sra string
+        :param name GSM identifier of the sample to convert.
+        :type name string
+        :param outdir Directory store the fastq files in.
+        :type outdir string
+        """
+        try:
+            FASTQ_DUMP = "fastq-dump"
+            cmd = "{0} --split-files --gzip {1} -O {2}".format(
+                                                              FASTQ_DUMP,
+                                                              sra,
+                                                              outdir,
+                                                              )
+                                                  
+            p = sp.Popen(cmd, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
+            stdout, stderr = p.communicate()
+            if stderr:
+                raise Exception(stderr)
+        
+            sys.stderr.write("Successfully converted {0} to fastq\n".format(sra))
+        
+            if not keep_sra:
+                os.unlink(sra)
+            
+            base = os.path.splitext(os.path.basename(sra))[0]
+            #os.unlink(sra)
+            p = re.compile(r'(SRR.+)\.sra')
+            m = p.search(sra)
+            srr = m.group(1)
+  
+            fqs = []
+            for old_fq in glob.glob(os.path.join(outdir, "*{0}*fastq.gz".format(base))):
+                fastq = os.path.join(outdir, "{0}.{1}.fq.gz".format(srr, name))
+                os.rename(old_fq, fastq)
+                fqs.append(fastq)
+    
+            return fqs
+    
+        except Exception as e:
+            sys.stderr.write("fastq-dump of {0} failed :(\n".format(sra))
+            sys.stderr.write("{0}\n".format(e))
+            return []
+
+
 
 if __name__ == "__main__":
     #for k,v in Geo.search("Heeringen AND Veenstra").items():
