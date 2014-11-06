@@ -130,7 +130,7 @@ class Geo:
                     f.close()
                 yield local_name
    
-    def download_sra(self, sra_link, outdir="./", gsm):
+    def download_sra(self, sra_link, gsm, outdir="./"):
         p = re.compile(r'term=(\w+)')
         m = p.search(sra_link)
         if m:
@@ -172,7 +172,7 @@ class Geo:
         :sample outdir string
         """
         for sra_link in sample['sra']:
-            for fname in self.download_sra(sra_link, outdir, gsm=sample['gsm']):
+            for fname in self.download_sra(sra_link, outdir=outdir, gsm=sample['gsm']):
                 yield fname
 
     def _soft_read(self, fh):

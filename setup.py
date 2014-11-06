@@ -31,8 +31,9 @@ setup(name = 'geo2fastq',
 	],
 	scripts=[
 		"scripts/geo2trackhub",
+           "scripts/geo2fastq",
 	],
-     requires=[], #TODO list required packages here
+     requires=["biopython", 'PyYaml',], #TODO list required packages here
      platforms=["linux"],
      data_files=[
         ('config', ["config/geo2fastq.yaml"]),

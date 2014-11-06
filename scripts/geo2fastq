@@ -27,9 +27,6 @@ p.add_argument("-d", "--download",
 
 args = p.parse_args()
 download    = args.download
-fastq       = args.fastq
-bam         = args.bam
-bigwig      = args.bigwig
 search_term = args.term
 
 config = config()
