@@ -1,4 +1,4 @@
-from distutils.core import setup, Command
+from setuptools import setup, Command
 import sys
 from geo2fastq.config import VERSION
 
@@ -33,11 +33,11 @@ setup(name = 'geo2fastq',
 		"scripts/geo2trackhub",
            "scripts/geo2fastq",
 	],
-     requires=["biopython", 'PyYaml',], #TODO list required packages here
-     platforms=["linux"],
-     data_files=[
-        ('config', ["config/geo2fastq.yaml"]),
-     ],
+	install_requires=["biopython", 'PyYaml',], #TODO list required packages here
+	platforms=["linux"],
+	data_files=[
+	('config', ["config/geo2fastq.yaml"]),
+	],
      #include_package_data=True,
-     cmdclass = {'test': PyTest},
+	cmdclass = {'test': PyTest},
 )

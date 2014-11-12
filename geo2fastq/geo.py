@@ -9,6 +9,7 @@ import re
 import os
 import subprocess as sp
 import glob
+import pdb
 
 GEOFTP_URLBASE = "ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/by_series/{0}/{0}_family.soft.gz"
 FTP_ROOT = "ftp-trace.ncbi.nlm.nih.gov"
@@ -128,6 +129,8 @@ class Geo:
                                    f.write
                                    )
                     f.close()
+                else:
+                    sys.stderr.write("{0} is present already...\n".format(local_name))
                 yield local_name
    
     def download_sra(self, sra_link, gsm, outdir="./"):
@@ -142,26 +145,15 @@ class Geo:
             sys.stderr.write("No SRA link found for {0}\n".format(gsm))
 
            
-    def download(self, gsm="", outdir="./"):
+    def download(self, outdir="./"):
         outdir = os.path.join(outdir, self.gse)
-        #samples = self.samples.values()
-        if gsm:
-            if not self.samples.has_key[gsm]:
-                raise Exception
-#            samples = [self.samples[gsm]]        
-#        for sample in samples:
-#            fnames = []
-#            for fname in self._download_sample(sample, outdir=outdir):
-#                fnames.append(fname)
-#            yield sample, fnames
-        for i in len(self.samples[gsm]):
-            sample = self.samples[gsm][i]
-            self.samples[gsm][i].sra_files = []
+        for sample in self.samples.values():
             fnames = []
             for fname in self._download_sample(sample, outdir=outdir):
-                self.samples[gsm][i].sra_files.append(fname)
-                fnames.append(fname) #probably outdated
+                fnames.append(fname)
+            sample['sra_files'] = fnames
             yield sample, fnames
+
 
 
     def _download_sample(self, sample, outdir="."):
@@ -196,9 +188,20 @@ class Geo:
         
     def check_sras(self):
         """Check the SRA files of all samples for sanity."""
-        for sample in self.samples:
-            for sra_file in sample.sra_files:
-                yield self._check_sra(sra_file)
+        #check for vdb-validate
+        output = sp.Popen('which vdb-validate', shell=True).communicate()[0]
+        try:
+            sp.check_output('which vdb-validate', shell=True)
+        except sp.CalledProcessError:
+            print "Could not find 'vdb-validate'-tool in system path; cannot ceck sanity of downloaded files.\n"
+            return
+        #check the sample files
+        print 'Checking downloaded files for sanity...'
+        for sample in self.samples.values():
+            for sra_file in sample['sra_files']:
+                status =  self._check_sra(sra_file)
+                if status == False:
+                   print 'File {0} seems to be not ok!\n'.format(sra_file)
     
     
     def _check_sra(self, sra):
@@ -221,12 +224,13 @@ class Geo:
     
     def sras2fastqs(self):
         """Convert the sra files of all samples to fastq files."""
-        for sample in self.samples:
-            for sra_file in sample.sra_files:
-                yield self._sra2fastq(sra=sra_file, name=sample.name)
+        for sample in self.samples.values():
+            for sra_file in sample['sra_files']:
+                pdb.set_trace()
+                yield self._sra2fastq(sra_file, sample['name'])
 
     
-    def _sra2fastq(sra, name, outdir=".", keep_sra=False):
+    def _sra2fastq(self, sra, name, outdir=".", keep_sra=False):
         """Convert an sra file to a fastq file. Returns a list of the fastq filenames.
         :param sra Filename of the .sra file.
         :type sra string
@@ -235,6 +239,7 @@ class Geo:
         :param outdir Directory store the fastq files in.
         :type outdir string
         """
+        pdb.set_trace()
         try:
             FASTQ_DUMP = "fastq-dump"
             cmd = "{0} --split-files --gzip {1} -O {2}".format(
