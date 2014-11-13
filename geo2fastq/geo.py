@@ -226,7 +226,6 @@ class Geo:
         """Convert the sra files of all samples to fastq files."""
         for sample in self.samples.values():
             for sra_file in sample['sra_files']:
-                pdb.set_trace()
                 yield self._sra2fastq(sra_file, sample['name'])
 
     
@@ -239,7 +238,6 @@ class Geo:
         :param outdir Directory store the fastq files in.
         :type outdir string
         """
-        pdb.set_trace()
         try:
             FASTQ_DUMP = "fastq-dump"
             cmd = "{0} --split-files --gzip {1} -O {2}".format(
