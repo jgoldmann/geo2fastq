@@ -1,5 +1,6 @@
 from setuptools import setup, Command
 import sys
+import subprocess as sp
 from geo2fastq.config import VERSION
 
 DESCRIPTION = """
@@ -15,8 +16,7 @@ class PyTest(Command):
         pass
         
     def run(self):
-        import sys,subprocess
-        errno = subprocess.call([sys.executable, 'runtests.py'])
+        errno = sp.call([sys.executable, 'runtests.py'])
         raise SystemExit(errno)
 
 

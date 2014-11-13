@@ -173,7 +173,6 @@ class Geo:
         soft = {}
         current = soft
         for line in fh:
-            ltype = line[0]
             try:
                 key, val = line[1:].strip().split(" = ")
                 if line.startswith("^"):
@@ -189,12 +188,11 @@ class Geo:
     def check_sras(self):
         """Check the SRA files of all samples for sanity."""
         #check for vdb-validate
-        output = sp.Popen('which vdb-validate', shell=True).communicate()[0]
         try:
             sp.check_output('which vdb-validate', shell=True)
         except sp.CalledProcessError:
             print "Could not find 'vdb-validate'-tool in system path; cannot ceck sanity of downloaded files.\n"
-            return
+            return []
         #check the sample files
         print 'Checking downloaded files for sanity...'
         for sample in self.samples.values():
@@ -229,7 +227,7 @@ class Geo:
                 yield self._sra2fastq(sra_file, sample['name'])
 
     
-    def _sra2fastq(self, sra, name, outdir=".", keep_sra=False):
+    def _sra2fastq(self, sra, name, outdir=self.gse, keep_sra=False):
         """Convert an sra file to a fastq file. Returns a list of the fastq filenames.
         :param sra Filename of the .sra file.
         :type sra string

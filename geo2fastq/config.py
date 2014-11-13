@@ -23,4 +23,4 @@ def config():
             pass
     raise Exception, "Configuration file {0} not found".format(cfgfile)
 
-VERSION = "1.0.2"
+VERSION = "1.1.0"

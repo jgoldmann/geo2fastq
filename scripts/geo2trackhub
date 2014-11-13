@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 import argparse
-import glob
-import os
-import re
-import sys
-import yaml
-from multiprocessing import Process, Queue
 from geo2fastq.config import VERSION, config
 from geo2fastq import Geo
-from geo2fastq.convert import *
 
 
 description = """
@@ -28,34 +21,14 @@ p.add_argument("-d", "--download",
                action="store_true",
                default=False,
                )
-p.add_argument("-fq", "--fastq",
-               dest="fastq",
-               help="Stop after converting download to fastq format.",
-               action="store_true",
-               default=False,
-              )
-p.add_argument("-bm", "--bam",
-               dest="bam",
-               help="Stop after mapping download to genome.",
-               action="store_true",
-               default=False,
-              )
-p.add_argument("-bw", "--bigwig",
-               dest="bigwig",
-               help="Stop after generating bigwig visualization of mapped sample.",
-               action="store_true",
-               default=False,
-              )
-
+              
 
 args = p.parse_args()
 download    = args.download
-fastq       = args.fastq
-bam         = args.bam
-bigwig      = args.bigwig
 search_term = args.term
 
 config = config()
+
 
 for gse, info in Geo.search(search_term).items():
     print "{0}\t{1}".format(gse, info['title'])
@@ -64,85 +37,14 @@ for gse, info in Geo.search(search_term).items():
     
     if download:
         
-        def put_things_in_queue(gen, q):
-            for result in gen():
-                q.put(result)
-            q.put("done")
-        
-        q = Queue()
-        
         # Get GEO info
         g = Geo(gse)
         # Download samples
-        p = Process(target=put_things_in_queue, args=(g.download, q,))
-        p.start()
+        for sample, fnames in g.download():
+           print 'Sample {0}: consists of file(s): {1}\n'.format(sample['gsm'], fnames)
         
-        jobs = []
-        while 1:
-            result = q.get()
-            if result == "done":
-                break
-            sample, sras = result
-            
-            for sra in sras:
-                if not check_sra(sra):
-                    sys.stderr.write("Downloaded sra file {0} seems not intact.".format(sra))
-                    sys.exit(1)
-                sys.stderr.write("Converting {0} to fastq\n".format(sra))
-                sra2fastq(sra, sample['gsm'], gse)
+        g.check_sras()
 
-            #print sample                
-            fqs = glob.glob(os.path.join(gse, "*{0}*.fq.gz".format(sample['gsm'])))
-            #print fqs
-            name = re.sub(r'[^a-zA-Z1-9_-]', "", sample['name'])
-            bam = os.path.join(gse, "{0}.{1}.bam".format(sample['gsm'], name))
+        all_fqs = [fqs for fqs in g.sras2fastqs()]
             
-            # Mapping the fastq file
-            if not fastq:
-                aligner = config['aligner'].setdefault(sample['library'], config['aligner']['default'])
-                genome_dir = config['genome_dir']
-                try:
-                    genome = config['genome_build'][sample['tax_id']]
-                except:
-                    sys.stderr.write("No genome_build specified for tax_id {0}".format(sample['tax_id']))
-                    sys.exit(1)
-                algn_cmd = config['ALIGN_CMD']
-            
-                sys.stderr.write("Mapping {0} to {1} with {3} to {4} -> {2}\n".format(
-                                                                    sample['gsm'],
-                                                                    genome,
-                                                                    bam,
-                                                                    aligner,
-                                                                    genome,
-                                                                    )
-                                )
-                fastq2bam(fqs, bam, genome, aligner=aligner, genome_dir=genome_dir, algn_cmd=algn_cmd) 
-            
-                # bigWig conversion
-                if not bam:
-                    # No dependencies, so can be run in seperate process
-                    bw = bam.replace(".bam", ".bw")
-                    p_bw = Process(target=bam2bw, args=(bam, bw,))
-                    sys.stderr.write("Creating bigWig from {0}".format(bam)) 
-                    p_bw.start()
-                    jobs.append(p_bw)
-                
-                # Wait for termination of download process
-            p.join()
-        
-            # Wait for remaining bigwig conversions 
-            if not bam:
-                for p_bw in jobs:
-                    p_bw.join()
-                
-            # trackhub conversion
-            if not bigwig:
-                print "trackhub creation not implemented yet"
-                
-#                #if stderr:
-#                #    sys.stderr.write("bam2bw failed\n")
-#                #    sys.stderr.write("{0}\n".format(stderr))
-#   
-#            create_hub(gse, samples, "/home/simon/dat/trackhubs", "simon", "localhost", "s.vanheeringen@ncmls.ru.nl")
-#   
-    
+
