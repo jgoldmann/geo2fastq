@@ -140,7 +140,6 @@ class Geo:
             srx = m.group(1)
             for fname in self.download_srx(srx, outdir):
                 yield fname
-                    
         else:
             sys.stderr.write("No SRA link found for {0}\n".format(gsm))
 
@@ -220,22 +219,21 @@ class Geo:
         return not (False in ok)
         
     
-    def sras2fastqs(self):
+    def sras2fastqs(self, keep_sra):
         """Convert the sra files of all samples to fastq files."""
         for sample in self.samples.values():
             for sra_file in sample['sra_files']:
-                yield self._sra2fastq(sra_file, sample['name'])
+                yield self._sra2fastq(sra_file, sample['name'], keep_sra=keep_sra)
 
     
-    def _sra2fastq(self, sra, name, outdir=self.gse, keep_sra=False):
+    def _sra2fastq(self, sra, name, keep_sra=False):
         """Convert an sra file to a fastq file. Returns a list of the fastq filenames.
         :param sra Filename of the .sra file.
         :type sra string
         :param name GSM identifier of the sample to convert.
         :type name string
-        :param outdir Directory store the fastq files in.
-        :type outdir string
         """
+        outdir=self.gse
         try:
             FASTQ_DUMP = "fastq-dump"
             cmd = "{0} --split-files --gzip {1} -O {2}".format(
@@ -271,17 +269,5 @@ class Geo:
         except Exception as e:
             sys.stderr.write("fastq-dump of {0} failed :(\n".format(sra))
             sys.stderr.write("{0}\n".format(e))
-            return []
-
-
-
-if __name__ == "__main__":
-    #for k,v in Geo.search("Heeringen AND Veenstra").items():
-    #    print k,v
-    
-    #x = Geo("GSE14025")
-    x = Geo(open("tests/data/GSE14025_family.soft.gz"))
-    for sample in x.samples.values():
-        print sample
-    
+            return []    
 

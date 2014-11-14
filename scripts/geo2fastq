@@ -21,11 +21,18 @@ p.add_argument("-d", "--download",
                action="store_true",
                default=False,
                )
+p.add_argument('-k', '--keep_sra',
+               dest='keep_sra',
+               help='Keep the sra files when converting to fastq.',
+               action='store_true',
+               default=False
+               )
               
 
 args = p.parse_args()
 download    = args.download
 search_term = args.term
+keep_sra    = args.keep_sra
 
 config = config()
 
@@ -45,6 +52,6 @@ for gse, info in Geo.search(search_term).items():
         
         g.check_sras()
 
-        all_fqs = [fqs for fqs in g.sras2fastqs()]
+        all_fqs = [fqs for fqs in g.sras2fastqs(keep_sra)]
             
 
