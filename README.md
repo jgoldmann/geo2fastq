@@ -1,23 +1,30 @@
 geo2fastq
 =========
 
-Download FASTQ files from the SRA archive
+Search the GEO database for a specific accession number. With the `-d` tag, the data will be downloaded and converted to fastq.
 
-Currently not in working state :)
 
 ## Dependencies
 
-Python:
-* Parallel Python
-* trackhub
+Python Modules:
+
 * biopython
+* PyYaml
 
 To create fastqs:
-* sra tools (fastq-dump)
-To map:
-* soladmin_align.rb
-* samtools
-To create bigwigs:
-* bedtools
-* phantompeakqualtools
-* R + spp
+
+* sra tools (fastq-dump and vdb-validate). Available from the [NCBI website](http://www.ncbi.nlm.nih.gov/Traces/sra/?view=software).
+
+
+## Install
+
+Download and run `python setup.py install`. Tests can be run with `python setup.py test`.
+
+
+## Run
+
+Usage: 
+
+* `geo2fastq <search term>` to search the database.
+* `geo2fastq -d <GSE_Accession>` to download and convert data.
+
