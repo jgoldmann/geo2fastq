@@ -35,7 +35,7 @@ search_term = args.term
 keep_sra    = args.keep_sra
 
 config = config()
-
+outdir = './'
 
 for gse, info in Geo.search(search_term).items():
     print "{0}\t{1}".format(gse, info['title'])
@@ -47,11 +47,13 @@ for gse, info in Geo.search(search_term).items():
         # Get GEO info
         g = Geo(gse)
         # Download samples
-        for sample, fnames in g.download():
-           print 'Sample {0}: consists of file(s): {1}\n'.format(sample['gsm'], fnames)
-        
-        g.check_sras()
-
-        all_fqs = [fqs for fqs in g.sras2fastqs(keep_sra)]
+#        for sample, fnames in g.download():
+#           print 'Sample {0}: consists of file(s): {1}\n'.format(sample['gsm'], fnames)
+#        
+#        g.check_sras()
+#
+#        all_fqs = [fqs for fqs in g.sras2fastqs(keep_sra)]
             
-
+        g.download()
+        g.check_sras()
+        g.sras2fastqs(keep_sra, outdir)
