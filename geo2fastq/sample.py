@@ -24,11 +24,9 @@ class Sample:
             
         
     def download(self, outdir):
-        #self.sra_files = map(lambda x:self.download_sra(x,outdir), self.sra)
         self.sra_files = {}
         for sra in self.sra:
             self.sra_files[sra] = self.download_sra(sra,outdir)
-#        self.sra_files = self.download_sra(self.sra, outdir) # there is a one-to-many conflict here!
         
         
     def download_sra(self, sra_link, outdir):
@@ -70,7 +68,6 @@ class Sample:
   
     
     def check_sras(self):
-        #status_ok = map(self._check_sra, self.sra_files)    
         status_ok = []
         sra_files = sum(self.sra_files.values(),[]) # hack to ensure that instead of list of lists, we will get a list
         for sra_file in sra_files:
@@ -95,7 +92,6 @@ class Sample:
     
         
     def sras2fastqs(self, outdir, keep_sra=False):
-        #self.fastqs = map(lambda x: self._sra2fastq(x, outdir, keep_sra), self.sra_files)
         self.fastqs = []
         sra_files = sum(self.sra_files.values(),[]) # hack to ensure that instead of list of lists, we will get a list
         for sra_file in sra_files:
@@ -110,7 +106,7 @@ class Sample:
                                                               sra_file,
                                                               outdir,
                                                               )
-            if not glob.glob('{0}*.fq.gz'.format(self.name)):
+            if not glob.glob('{0}*.fq.gz'.format(sra_file[0:-4])):
                 p = sp.Popen(cmd, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
                 stdout, stderr = p.communicate()
                 if stderr:
@@ -118,20 +114,20 @@ class Sample:
                 sys.stderr.write("Successfully converted {0} to fastq\n".format(sra_file))
                 if not keep_sra:
                     os.unlink(sra_file)
-                
-            else:
-                print 'File {0} is converted to fastq already, skipping.\n'.format(sra_file)
-            base = os.path.splitext(os.path.basename(sra_file))[0]
-            #os.unlink(sra)
-            p = re.compile(r'(SRR.+)\.sra')
-            m = p.search(sra_file)
-            srr = m.group(1)
-            fqs = []
-            for old_fq in glob.glob(os.path.join(outdir, "*{0}*fastq.gz".format(base))):
-                fastq = os.path.join(outdir, "{0}.{1}.fq.gz".format(srr, self.name))
-                os.rename(old_fq, fastq)
-                fqs.append(fastq)
-            return fqs
+                base = os.path.splitext(os.path.basename(sra_file))[0]
+                p = re.compile(r'(SRR.+)\.sra')
+                m = p.search(sra_file)
+                srr = m.group(1)
+                fqs = []
+                for old_fq in glob.glob(os.path.join(outdir, "*{0}*fastq.gz".format(base))):
+                    fastq = os.path.join(outdir, "{0}.{1}.fq.gz".format(srr, self.name))
+                    os.rename(old_fq, fastq)
+                    fqs.append(fastq)
+                return fqs
+            else: #if fastq exists
+                print 'File {0} is converted to fastq already, skipping.'.format(sra_file)
+                fqs = glob.glob(sra_file[0:-3]+'*.fq*')
+                return fqs
         except Exception as e:
             sys.stderr.write("fastq-dump of {0} failed :(\n".format(sra_file))
             sys.stderr.write("{0}\n".format(e))

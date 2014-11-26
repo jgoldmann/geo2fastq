@@ -4,12 +4,8 @@ from Bio import Entrez
 import sys
 import StringIO
 import gzip
-#from ftplib import FTP
-#import re
 import os
 import subprocess as sp
-#import glob
-#import pdb
 from sample import Sample
 from multiprocessing import Pool
 
@@ -25,7 +21,6 @@ class Geo:
         :param gse: GEO accession or filehandle to GEO soft file
         :type accession: string or file
         """
-        
         self.gse = gse
         self.email = email
         self.samples = {}
@@ -94,17 +89,6 @@ class Geo:
         g = gzip.GzipFile(fileobj=fo)
         record = self._soft_read(g)
         self.gse = record['SERIES'].keys()[0]
-#        for gsm, data in record['SAMPLE'].items():
-#            #for k,v in data.items():
-#            #    print k,v
-#            sample = {'gsm':gsm}
-#            sample['tax_id'] = int(data['Sample_taxid_ch1'][0])
-#            sample['sra'] = []
-#            sample['name'] = data['Sample_title'][0]
-#            sample['library'] = data['Sample_library_strategy'][0]
-#            sample['info'] = data['Sample_characteristics_ch1']
-#            for sra_link in [x for x in data['Sample_relation'] if x.startswith("SRA")]:
-#                sample['sra'].append(sra_link)
         for gsm, data in record['SAMPLE'].items():
             sample = Sample(gsm, data)
             yield sample
@@ -128,54 +112,6 @@ class Geo:
         return soft
 
  
-#    def download_srx(self, srx, outdir):
-#        if not os.path.exists(outdir):
-#            os.mkdir(outdir)
-#        
-#        ftp = FTP(FTP_ROOT)
-#        ftp.login()
-#        rootdir = "/sra/sra-instant/reads/ByExp/sra/SRX/{0}/{1}".format(srx[:6], srx)
-#        ftp.cwd(rootdir)
-#        dirs  = []
-#        ftp.retrlines('LIST', callback=lambda x: dirs.append(x.split(" ")[-1]))
-#        for dirname in dirs:
-#            ftp.cwd(os.path.join(rootdir, dirname))
-#            fnames = []
-#            ftp.retrlines('LIST', callback=lambda x: fnames.append(x.split(" ")[-1]))
-#            for fname in fnames:
-#                local_name = os.path.join(outdir,fname)
-#                if not os.path.exists(local_name):
-#                    sys.stderr.write("Downloading {0}...\n".format(local_name))
-#                    f = open(local_name, "w")
-#                    ftp.retrbinary(
-#                                   "RETR {0}".format(os.path.join(rootdir, dirname, fname)),
-#                                   f.write
-#                                   )
-#                    f.close()
-#                else:
-#                    sys.stderr.write("{0} is present already...\n".format(local_name))
-#                yield local_name
-#   
-#    def download_sra(self, sra_link, gsm, outdir="./"):
-#        p = re.compile(r'term=(\w+)')
-#        m = p.search(sra_link)
-#        if m:
-#            srx = m.group(1)
-#            for fname in self.download_srx(srx, outdir):
-#                yield fname
-#        else:
-#            sys.stderr.write("No SRA link found for {0}\n".format(gsm))
-#
-#           
-#    def download(self, outdir="./"):
-#        outdir = os.path.join(outdir, self.gse)
-#        for sample in self.samples.values():
-#            fnames = []
-#            for fname in self._download_sample(sample, outdir=outdir):
-#                fnames.append(fname)
-#            sample['sra_files'] = fnames
-#            yield sample, fnames
-
     def download(self, outdir='./'):
         outdir = os.path.join(outdir, self.gse)
         pool = Pool(len(self.samples))
@@ -188,17 +124,6 @@ class Geo:
         return []
         
 
-#    def _download_sample(self, sample, outdir="."):
-#        """ Download a sample of the Geo object. Returns the filename.
-#        :params sample The GSM identifier of the sample to download.
-#        :type sample string
-#        :params outdir The directory path to save the downloaded file in.
-#        :sample outdir string
-#        """
-#        for sra_link in sample['sra']:
-#            for fname in self.download_sra(sra_link, outdir=outdir, gsm=sample['gsm']):
-#                yield fname
-#
 
         
     def check_sras(self):
@@ -218,30 +143,6 @@ class Geo:
         pool.join()
         return ok
 
-#        for sample in self.samples.values():
-#            for sra_file in sample['sra_files']:
-#                status =  self._check_sra(sra_file)
-#                if status == False:
-#                   print 'File {0} seems to be not ok!\n'.format(sra_file)
-
-    
-    
-#    def _check_sra(self, sra):
-#        """Check an sra file for sanity.
-#        :param sra Path to sra file.
-#        :type  sra string
-#        :returns boolean to indicate sanity."""
-#        cmd = "vdb-validate {0}"
-#        p = sp.Popen(cmd.format(sra),
-#                     stdout=sp.PIPE,
-#                     stderr=sp.PIPE,
-#                     shell=True)
-#        stdout, stderr = p.communicate()
-#        message = stderr
-#        ok = []
-#        for line in message.splitlines():
-#            ok.append(line.endswith('ok') or line.endswith("consistent"))
-#        return not (False in ok)
         
     
     def sras2fastqs(self, keep_sra, outdir='./'):
@@ -265,54 +166,4 @@ class Geo:
         pool.join()
         return []
 
-#        for sample in self.samples.values():
-#            for sra_file in sample['sra_files']:
-#                yield self._sra2fastq(sra_file, sample['name'], keep_sra=keep_sra)
-        
-
-    
-#    def _sra2fastq(self, sra, name, keep_sra=False):
-#        """Convert an sra file to a fastq file. Returns a list of the fastq filenames.
-#        :param sra Filename of the .sra file.
-#        :type sra string
-#        :param name GSM identifier of the sample to convert.
-#        :type name string
-#        """
-#        outdir=self.gse
-#        try:
-#            FASTQ_DUMP = "fastq-dump"
-#            cmd = "{0} --split-files --gzip {1} -O {2}".format(
-#                                                              FASTQ_DUMP,
-#                                                              sra,
-#                                                              outdir,
-#                                                              )
-#                                                  
-#            p = sp.Popen(cmd, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
-#            stdout, stderr = p.communicate()
-#            if stderr:
-#                raise Exception(stderr)
-#        
-#            sys.stderr.write("Successfully converted {0} to fastq\n".format(sra))
-#        
-#            if not keep_sra:
-#                os.unlink(sra)
-#            
-#            base = os.path.splitext(os.path.basename(sra))[0]
-#            #os.unlink(sra)
-#            p = re.compile(r'(SRR.+)\.sra')
-#            m = p.search(sra)
-#            srr = m.group(1)
-#  
-#            fqs = []
-#            for old_fq in glob.glob(os.path.join(outdir, "*{0}*fastq.gz".format(base))):
-#                fastq = os.path.join(outdir, "{0}.{1}.fq.gz".format(srr, name))
-#                os.rename(old_fq, fastq)
-#                fqs.append(fastq)
-#    
-#            return fqs
-#    
-#        except Exception as e:
-#            sys.stderr.write("fastq-dump of {0} failed :(\n".format(sra))
-#            sys.stderr.write("{0}\n".format(e))
-#            return []    
 

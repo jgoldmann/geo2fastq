@@ -2,9 +2,6 @@ from unittest import TestCase
 import geo2fastq
 from geo2fastq import Geo
 import os
-#import shutil
-#import glob
-#import re
 
 config = geo2fastq.config.config()
 
@@ -12,12 +9,14 @@ config = geo2fastq.config.config()
 class TestClass(TestCase):
     def test_Geo_search(self):
         gse = 'GSE14025'
-        results = Geo.search(gse)
-        assert(results[gse]['title'] == "A Hierarchy of H3K4me3 and H3K27me3 Acquisition in Spatial Gene Regulation in Xenopus Embryos")
-        assert(results[gse]['samples'].has_key("GSM352204"))
-        assert(results[gse]['samples'].has_key("GSM352202"))
-        assert(results[gse]['samples'].has_key("GSM352203"))
-        assert(results[gse]['samples'].has_key("GSM419463"))
+        for gse_out, info in Geo.search(gse).items():
+           #print "{0}\t{1}".format(gse, info['title'])
+           assert(info['title'] == "A Hierarchy of H3K4me3 and H3K27me3 Acquisition in Spatial Gene Regulation in Xenopus Embryos")
+           for gsm,title in info['samples'].items():
+               #print "  {0}\t{1}".format(gsm, title)
+               assert(gsm.startswith('GSM'))
+           assert(info['samples'].has_key("GSM352204"))
+
 
 
     def test_Geo_get_sample_info(self):
@@ -26,29 +25,30 @@ class TestClass(TestCase):
         
         info = g.get_sample_info(gse)
         for i in info:
-            assert(i.has_key('name'))
+            assert(i.name != '')
 
         
     def test_Geo_download(self):
         gse = 'GSE14025'
         g = Geo(gse)
-        fname_generator = g.download() #takes about 20 minutes
-        for sample, fname in fname_generator:
-            for path in fname:
-                assert(os.path.exists(path))
+        g.download()
+        all_sras = []
+        for sample in g.samples.values():
+            all_sras.append(sum(sample.sra_files.values(),[]))
+        for sra in sum(all_sras,[]):
+            assert(os.path.exists(sra))
                 
        
     def test_sra2fastq(self):
         gse = 'GSE14025'
         g = Geo(gse)
-        fname_generator = g.download()
-        for sample, fname in fname_generator:
-            for path in fname:
-                assert(os.path.exists(path))
-        all_fqs = [fqs for fqs in g.sras2fastqs(keep_sra=True)]
-        for fqs in all_fqs:
-            for fq in fqs:
-                assert(os.path.exists(fq))
+        g.download()
+        all_fastqs = []
+        g.sras2fastqs(keep_sra=True)
+        for sample in g.samples.values():
+            all_fastqs.append(sum(sample.fastqs, []))
+        for fastq in sum(all_fastqs, []):
+            assert(os.path.exists(fastq))
         
       
       

@@ -11,6 +11,8 @@ setup(name = 'geo2fastq',
      long_description=open('README.md').read(),
 	author='Simon van Heeringen',
 	author_email='s.vanheeringen@ncmls.ru.nl',
+      maintainer='Jakob M Goldmann',
+      maintainer_email='jakob.goldmann@mail.de',
 	license='MIT',
 	packages=[
 		'geo2fastq'

@@ -14,7 +14,6 @@ def config():
     global_config_dir = resource_filename(Requirement.parse(pkg), "config")
 
     paths = [os.curdir] + [os.path.join(d, pkg) for d in XDG_CONFIG_DIRS] + [global_config_dir]
-    #print paths
     for path in paths:
         try:
             with open(os.path.join(path, cfgfile)) as fo:
