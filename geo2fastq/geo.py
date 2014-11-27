@@ -7,7 +7,8 @@ import gzip
 import os
 import subprocess as sp
 from sample import Sample
-from multiprocessing import Pool
+import pp
+import pdb
 
 
 GEOFTP_URLBASE = "ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/by_series/{0}/{0}_family.soft.gz"
@@ -114,16 +115,14 @@ class Geo:
  
     def download(self, outdir='./'):
         outdir = os.path.join(outdir, self.gse)
-        pool = Pool(len(self.samples))
-        tuples = zip(self.samples.values(), 
-                     [outdir]*len(self.samples))
-        map(lambda x:x[0].download(x[1]),
-                 tuples)
-        pool.close()
-        pool.join()
+        server = pp.Server(len(self.samples))
+        for sample in self.samples.values():
+            sra_files = server.submit(sample.download, (outdir,), modules=('geo2fastq.sample',))()
+            if 'sra_files' not in dir(sample):  #make sure that the sra filenames arrive in the sample instance of the main process
+                sample.sra_files = sra_files
         return []
         
-
+        
 
         
     def check_sras(self):
@@ -134,13 +133,9 @@ class Geo:
         except sp.CalledProcessError:
             print "Could not find 'vdb-validate'-tool in system path; cannot ceck sanity of downloaded files.\n"
             return []
-        #else, check the sample files
         print 'Checking downloaded files for sanity...'
-        pool = Pool(len(self.samples))
-        ok = map(lambda x:x.check_sras(),
-                      self.samples.values())
-        pool.close()
-        pool.join()
+        server = pp.Server(len(self.samples))
+        ok = [server.submit(sample.check_sras)() for sample in self.samples.values()]
         return ok
 
         
@@ -156,14 +151,10 @@ class Geo:
             return []
         #else, check the sample files
         print 'Converting files to fastq...'
-        pool = Pool(len(self.samples))
-        tuples = zip(self.samples.values(),
-                     [outdir]*len(self.samples),
-                     [keep_sra]*len(self.samples))
-        map(lambda x:x[0].sras2fastqs(x[1], x[2]),
-                 tuples)
-        pool.close()
-        pool.join()
+        server = pp.Server(len(self.samples))
+        for sample in self.samples.values():
+            fastqs = server.submit(sample.sras2fastqs, (outdir, keep_sra))()
+            sample.fastqs = fastqs
         return []
 
 

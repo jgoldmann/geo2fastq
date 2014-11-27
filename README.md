@@ -10,6 +10,7 @@ Python Modules:
 
 * biopython
 * PyYaml
+* parallel python
 
 To create fastqs:
 

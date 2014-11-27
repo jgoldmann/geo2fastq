@@ -25,8 +25,12 @@ class Sample:
         
     def download(self, outdir):
         self.sra_files = {}
+        sra_files = {}
         for sra in self.sra:
-            self.sra_files[sra] = self.download_sra(sra,outdir)
+            files = self.download_sra(sra,outdir)
+            self.sra_files[sra] = files
+            sra_files[sra] = files
+        return sra_files
         
         
     def download_sra(self, sra_link, outdir):
@@ -48,6 +52,7 @@ class Sample:
         ftp.cwd(rootdir)
         dirs  = []
         ftp.retrlines('LIST', callback=lambda x: dirs.append(x.split(" ")[-1]))
+        #pdb.set_trace()
         for dirname in dirs:
             ftp.cwd(os.path.join(rootdir, dirname))
             fnames = []
@@ -93,9 +98,13 @@ class Sample:
         
     def sras2fastqs(self, outdir, keep_sra=False):
         self.fastqs = []
+        fastqs = []
         sra_files = sum(self.sra_files.values(),[]) # hack to ensure that instead of list of lists, we will get a list
         for sra_file in sra_files:
-            self.fastqs.append(self._sra2fastq(sra_file, outdir, keep_sra))
+            fqs = self._sra2fastq(sra_file, outdir, keep_sra)
+            self.fastqs.append(fqs)
+            fastqs.append(fqs)
+        return fastqs
         
     
     def _sra2fastq(self, sra_file, outdir, keep_sra):

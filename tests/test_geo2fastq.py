@@ -5,6 +5,7 @@ import os
 
 config = geo2fastq.config.config()
 
+# run tests with test debugging mode: nosetests --pdb tests/test_geo2fastq.py
 
 class TestClass(TestCase):
     def test_Geo_search(self):
