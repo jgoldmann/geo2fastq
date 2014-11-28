@@ -156,5 +156,18 @@ class Geo:
             fastqs = server.submit(sample.sras2fastqs, (outdir, keep_sra))()
             sample.fastqs = fastqs
         return []
+    
+    
+    def fastqs2bams(self, config, outdir, force=False):
+        print 'Starting Alignments...'
+        outdir = os.path.join(outdir, self.gse)
+        server = pp.Server(len(self.samples))
+        bams = []
+        for sample in self.samples.values():
+            bam = server.submit(sample.fastqs2bam, (config, outdir, force), modules=('re',))()
+            sample.bam = bam
+            bams.append(bam)
+        print 'Finished with alining.'
+        return bams
 
 

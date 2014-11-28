@@ -52,7 +52,15 @@ class TestClass(TestCase):
             assert(os.path.exists(fastq))
         
       
-      
+    def test_fastqs2bams(self):
+        g = Geo('GSE14025')
+        g.download()
+        g.sras2fastqs()
+        bams = g.sras2fastqs(config)
+        for bam in bams:
+            assert(os.path.exists(bam))
+        
+        
 #    def test_fastq2bam(self):
 #        # depends on test_sra2fastq
 #        gse = 'GSE14025'

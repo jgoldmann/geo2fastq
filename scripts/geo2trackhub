@@ -2,6 +2,7 @@
 import argparse
 from geo2fastq.config import VERSION, config
 from geo2fastq import Geo
+import pickle
 
 
 description = """
@@ -21,14 +22,21 @@ p.add_argument("-d", "--download",
                action="store_true",
                default=False,
                )
+p.add_argument('-k', '--keep_sra',
+               dest='keep_sra',
+               help='Keep the sra files when converting to fastq.',
+               action='store_true',
+               default=False
+               )
               
 
 args = p.parse_args()
 download    = args.download
 search_term = args.term
+keep_sra    = args.keep_sra
 
 config = config()
-
+outdir = './'
 
 for gse, info in Geo.search(search_term).items():
     print "{0}\t{1}".format(gse, info['title'])
@@ -37,14 +45,10 @@ for gse, info in Geo.search(search_term).items():
     
     if download:
         
-        # Get GEO info
-        g = Geo(gse)
-        # Download samples
-        for sample, fnames in g.download():
-           print 'Sample {0}: consists of file(s): {1}\n'.format(sample['gsm'], fnames)
-        
+        g = Geo(gse)            
+        g.download()
         g.check_sras()
-
-        all_fqs = [fqs for fqs in g.sras2fastqs()]
-            
-
+        g.sras2fastqs(keep_sra, outdir)
+        g.fastqs2bams(config, outdir)
+        #pickle.dump(g, open('g.pkl','w'))
+        

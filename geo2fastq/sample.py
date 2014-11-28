@@ -4,6 +4,7 @@ import os
 import glob
 from ftplib import FTP
 import subprocess as sp
+import shutil
 import pdb
 
 GEOFTP_URLBASE = "ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/by_series/{0}/{0}_family.soft.gz"
@@ -143,8 +144,83 @@ class Sample:
             return []    
 
         
+    def fastqs2bam(self, config, outdir, force=False):
+        # collect and preformat data
+        fastqs = sum(self.fastqs, [])
+        name = re.sub(r'[^a-zA-Z1-9_-]', "", self.name)
+        bam = os.path.join(outdir,'{0}.{1}.bam'.format(self.gsm, name))
+        genome = config['genome_build'][self.tax_id]
+        if self.library in config['aligner'].keys():
+            aligner = config['aligner'][self.library]
+        else:
+            aligner = config['aligner']['default']
+        genome_dir = config['genome_dir']
+        algn_cmd = config['ALIGN_CMD']
+        # call mapping method
+        self._map(fastqs, bam, genome, aligner, genome_dir, algn_cmd, force)
+        self.bam = bam
+        return bam
 
-
+    
+    def _map(self, fqs, bam, genome, aligner="", genome_dir="", algn_cmd="", force=False):
+        """Map fastq reads to the genome and generate a bam file.
+        :param fqs List of fastq filenames.
+        :type  fqs list
+        :param bam Path to the bam file to generate.
+        :type  bam string
+        :param genome Genome name to map reads to (as defined in the configfile).
+        :type  genome string
+        :param aligner Alignment program (as defined in the configfile).
+        :type  aligner string
+        :param genome_dir Directory of the genome files for the mapper (as definced in configfile).
+        :type  genome_dir string
+        :param algn_cmd Command structure for the alignment wrapper.
+        :type  algn_cmd string
+        :param force Re-map even if bamfiles exist already. Defaults to False.
+        :type  force boolean
+        """
+        bams = [] 
+        if os.path.exists(bam) and not force:
+           sys.stderr.write("{0} already exists, skipping...\n".format(bam))
+           return
+        for fq in fqs:
+            #first, map to intermediate bams
+            bname = fq.replace(".fq.gz", "") 
+            if os.path.exists(bname+".bam"):
+                os.unlink(bname+".bam")
+            #delete temporary directory of the bwa mapper
+            if os.path.exists(bname):
+                shutil.rmtree(bname)
+            cmd = algn_cmd.format(fq, bname, genome, aligner, genome_dir)
+            sys.stderr.write("Mapping {0} to {1}\n".format(fq, genome))
+            p = sp.Popen(cmd, 
+                             shell=True, 
+                             stderr=sp.PIPE, 
+                             stdout=sp.PIPE)
+            stdout, stderr = p.communicate() #bwa gives a lot of routine messages on stdout, so don't check for it
+            if not os.path.exists("{0}.bam".format(bname)):
+                sys.stderr.write("Alignment failed\n")
+                sys.stderr.write(stderr)
+                sys.exit(1)
+            bams.append("{0}.bam".format(bname))
+        if len(bams) == 1:
+            os.rename(bams[0], bam)
+            os.rename(bams[0] + ".bai", bam + ".bai")
+        elif len(bams) > 1:
+            cmd = "{0} merge -f {1} {2} && samtools index {1}"
+            cmd = cmd.format(
+                             "samtools",
+                             bam,
+                             " ".join(bams),
+                             )
+            ret = sp.call(cmd, shell=True)
+            if not ret:
+                for bamfile in bams:
+                    os.unlink(bamfile)
+                    os.unlink("{0}.bai".format(bamfile))
+            else:
+                sys.stderr.write("Merging failed!\n")
+                sys.exit(1)
 
 
 

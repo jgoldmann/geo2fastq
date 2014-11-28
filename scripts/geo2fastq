@@ -49,4 +49,5 @@ for gse, info in Geo.search(search_term).items():
         g.check_sras()
         g.sras2fastqs(keep_sra, outdir)
         
+        print 'Finished with {0}.'.format(gse)
         
