@@ -55,7 +55,7 @@ class TestClass(TestCase):
     def test_fastqs2bams(self):
         g = Geo('GSE14025')
         g.download()
-        g.sras2fastqs()
+        g.sras2fastqs(keep_sra = True)
         bams = g.sras2fastqs(config)
         for bam in bams:
             assert(os.path.exists(bam))
