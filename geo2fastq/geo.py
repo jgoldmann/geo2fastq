@@ -158,7 +158,7 @@ class Geo:
         return []
     
     
-    def fastqs2bams(self, config, outdir, force=False):
+    def fastqs2bams(self, config, outdir='./', force=False):
         print 'Starting Alignments...'
         outdir = os.path.join(outdir, self.gse)
         server = pp.Server(len(self.samples))
@@ -169,5 +169,21 @@ class Geo:
             bams.append(bam)
         print 'Finished with alining.'
         return bams
+
+    
+    def bams2bws(self,force=False):
+        print 'Starting bigwig conversions...'
+        server = pp.Server(len(self.samples))
+        bws = []
+        for sample in self.samples.values():
+            bw = server.submit(sample.bam2bw, (force,), modules=('subprocess as sp',))() #parallel
+            #bw = sample.bam2bw(force) #sequentially
+            sample.bw = bw
+            bws.append(bw)
+        print 'Done with generating bigwigs.'
+        return bws
+
+
+
 
 

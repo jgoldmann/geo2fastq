@@ -50,5 +50,6 @@ for gse, info in Geo.search(search_term).items():
         g.check_sras()
         g.sras2fastqs(keep_sra, outdir)
         g.fastqs2bams(config, outdir)
+        g.bams2bws()
         #pickle.dump(g, open('g.pkl','w'))
         

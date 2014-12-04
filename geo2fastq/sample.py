@@ -223,5 +223,43 @@ class Sample:
                 sys.exit(1)
 
 
-
+    def bam2bw(self, force=False):
+        try:
+            bam2bw = sp.check_output(['which', 'bam2bw']) #the generation of the unused variable 'bam2bw' here is to prevent interactive output of the command's result
+        except sp.CalledProcessError as e:
+            print 'Could not find bam2bw tool; stopping here: {0}'.format(e)
+            sys.exit()
+        bw = self.bam.replace('.bam', '.bw')
+        self._bam2bw(self.bam, bw, self.library, force)
+        self.bw = bw
+        return bw
+    
+    
+    def _bam2bw(self, bam, bw, library=None, force=False):
+       """ Convert bam to UCSC bigWig 
+       :param bam Path to the bam file.
+       :type  bam string
+       :param bw Path to output bigwig file.
+       :type  bw string
+       :param library Library of the sample (e.g. 'RNA-seq' or 'Chip_seq')
+       :type  library string
+       """
+       # Don't overwrite existing bigWig if not explicitly stated
+       if os.path.exists(bw) and not force:
+           sys.stderr.write("{0} already exists, skipping...\n".format(bw))
+           return None, None
+       
+       if library == "RNA-Seq":
+           # Do not extend, keep duplicates
+           cmd = "bam2bw -i {0} -o {1} -D".format(bam, bw)
+       elif library == "ChIP-Seq":
+           # Extend to estimated fragment size and normalize
+           cmd = "bam2bw -i {0} -o {1} -e auto -c".format(bam, bw)
+       else:
+           # Same as ChIP-seq for now
+           cmd = "bam2bw -i {0} -o {1} -e auto -c".format(bam, bw)
+       
+       p = sp.Popen(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+       stdout,stderr = p.communicate()
+       return stdout, stderr
 

@@ -56,30 +56,20 @@ class TestClass(TestCase):
         g = Geo('GSE14025')
         g.download()
         g.sras2fastqs(keep_sra = True)
-        bams = g.sras2fastqs(config)
+        bams = g.fastqs2bams(config)
         for bam in bams:
             assert(os.path.exists(bam))
         
         
-#    def test_fastq2bam(self):
-#        # depends on test_sra2fastq
-#        gse = 'GSE14025'
-#        g = Geo(gse)
-#        sample = g.samples[g.samples.keys()[1]]
-#        fqs = glob.glob(os.path.join(gse, "*{0}*.fq.gz".format(sample['gsm'])))
-#        name = re.sub(r'[^a-zA-Z1-9_-]', "", sample['name'])
-#        bam = os.path.join(gse, "{0}.{1}.bam".format(sample['gsm'], name))
-#        aligner = config['aligner'].setdefault(sample['library'], config['aligner']['default'])
-#        genome_dir = config['genome_dir']
-#        genome = config['genome_build'][sample['tax_id']] 
-#        algn_cmd = config['ALIGN_CMD']
-#        #TODO: in future, test with some less exotic genome (now xenTro3beta)
-#        geo2fastq.convert.fastq2bam(fqs, bam, genome, aligner, genome_dir, algn_cmd)
-#        assert(os.path.exists(bam))
-#        assert(os.path.exists("{0}.bai".format(bam)))
-#        for fq in fqs:
-#            os.unlink(fq)
-#        
+    def test_bams2bws(self):
+        g = Geo('GSE14025')
+        g.download()
+        g.sras2fastqs(keep_sra = True)
+        g.fastqs2bams(config)
+        bws = g.bams2bws()
+        for bw in bws:
+            assert(os.path.exists(bw))
+            
 #        
 #    def test_bam2bw(self):
 #        # depends on test_fastq2bam

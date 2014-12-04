@@ -16,6 +16,9 @@ To create fastqs:
 
 * sra tools (fastq-dump and vdb-validate). Available from the [NCBI website](http://www.ncbi.nlm.nih.gov/Traces/sra/?view=software).
 
+For easy bigwig generation:
+
+* [bam2bw](https://bitbucket.org/simonvh/bam2bw)
 
 ## Install
 
