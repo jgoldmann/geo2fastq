@@ -1,4 +1,4 @@
-    ###########################################
+###########################################
 # geo2fastq configuration file
 # adapt these settings for your environment
 ###########################################
@@ -35,6 +35,10 @@ ALIGN_CMD: /opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -
 
 # trackhub uploads --------------------
 
-HUB_URLBASE: http://mbpcsimon.azn.nl/trackhubs
+#local path to the directory where the trackhubs are to be published
+HUB_LOCALBASE: /mnt/trackhub/tmp/
+
+#internet path under which the trackhub directory will be accessible from outside
+HUB_URLBASE: http://trackhub.science.ru.nl/tmp/
 
 

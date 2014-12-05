@@ -6,6 +6,7 @@ from ftplib import FTP
 import subprocess as sp
 import shutil
 import pdb
+from trackhub import Track
 
 GEOFTP_URLBASE = "ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/by_series/{0}/{0}_family.soft.gz"
 FTP_ROOT = "ftp-trace.ncbi.nlm.nih.gov"
@@ -262,4 +263,21 @@ class Sample:
        p = sp.Popen(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
        stdout,stderr = p.communicate()
        return stdout, stderr
+
+
+    def generate_track_object(self, config, gse):
+        genome = config['genome_build'][self.tax_id]
+        track_path = os.path.join(os.getenv('USER'), gse, genome, "{0}.bw".format(self.gsm))
+        track = Track(name = self.name,
+                      url = os.path.join(config['HUB_URLBASE'], track_path),
+                      local_fn = self.bw,
+                      remote_fn = os.path.join(config['HUB_LOCALBASE'], track_path),
+                      tracktype = 'bigWig',
+                      short_label = self.gsm,
+                      long_label = self.name + str(self.info),
+                      color = '128,128,0')
+        self.track = track
+        return track
+
+
 

@@ -51,5 +51,6 @@ for gse, info in Geo.search(search_term).items():
         g.sras2fastqs(keep_sra, outdir)
         g.fastqs2bams(config, outdir)
         g.bams2bws()
+        g.generate_trackhub(config, outdir)
         #pickle.dump(g, open('g.pkl','w'))
         

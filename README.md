@@ -6,11 +6,13 @@ Search the GEO database for a specific accession number. With the `-d` tag, the 
 
 ## Dependencies
 
-Python Modules:
+Python Modules (should be automatically installed during installation):
 
 * biopython
 * PyYaml
 * parallel python
+* trackhub
+* fabric
 
 To create fastqs:
 

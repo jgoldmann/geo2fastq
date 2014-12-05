@@ -8,6 +8,8 @@ import os
 import subprocess as sp
 from sample import Sample
 import pp
+import trackhub
+import trackhub.upload
 import pdb
 
 
@@ -89,6 +91,7 @@ class Geo:
         # Parse gzipped SOFT file
         g = gzip.GzipFile(fileobj=fo)
         record = self._soft_read(g)
+        self.record = record
         self.gse = record['SERIES'].keys()[0]
         for gsm, data in record['SAMPLE'].items():
             sample = Sample(gsm, data)
@@ -184,6 +187,47 @@ class Geo:
         return bws
 
 
-
+    def generate_trackhub(self, config, outdir):
+        hub_path = os.path.join(os.getenv('USER'), self.gse)
+        hub_path_local =  os.path.join(outdir, self.gse)
+        hub = trackhub.Hub(hub = self.gse,
+                           short_label = self.gse,
+                           long_label =  self.record['SERIES'][self.gse]['Series_title'],
+                           email = self.email,
+                           )
+        hub.local_fn =  os.path.join(hub_path_local,                    '{0}.hub.txt'.format(self.gse))
+        hub.remote_fn = os.path.join(config['HUB_LOCALBASE'], hub_path, '{0}.hub.txt'.format(self.gse))
+        hub.url =       os.path.join(config['HUB_URLBASE'],   hub_path, '{0}.hub.txt'.format(self.gse))
+        genomes_in_samples = set()
+        tracks = []
+        for sample in self.samples.values():
+            #collect tracks
+            track = sample.generate_track_object(config, self.gse)
+            sample.track = track
+            tracks.append(track)
+            #collect genomes
+            genomes_in_samples.add(config['genome_build'][sample.tax_id])
+                
+        trackdb = trackhub.TrackDb()
+        trackdb.local_fn =  os.path.join(hub_path_local,                    '{0}.trackDb.txt'.format(self.gse))
+        trackdb.remote_fn = os.path.join(config['HUB_LOCALBASE'], hub_path, '{0}.trackDb.txt'.format(self.gse))
+        trackdb.url =       os.path.join(config['HUB_URLBASE'],   hub_path, '{0}.trackDb.txt'.format(self.gse))
+        trackdb.add_tracks(tracks)
+        #crude hack: add every track to every genome
+        genomes = [trackhub.Genome(genome, trackdb) for genome in genomes_in_samples]
+        genomesFile = trackhub.GenomesFile(genomes)
+        genomesFile.local_fn  = os.path.join(hub_path_local,                    '{0}.genomes.txt'.format(self.gse))
+        genomesFile.remote_fn = os.path.join(config['HUB_LOCALBASE'], hub_path, '{0}.genomes.txt'.format(self.gse))
+        genomesFile.url       = os.path.join(config['HUB_URLBASE'],   hub_path, '{0}.genomes.txt'.format(self.gse))
+        hub.add_genomes_file(genomesFile)
+        
+        
+        #upload tracks
+        hub.render()
+        for track in trackdb.tracks:
+            trackhub.upload.upload_track(track=track, host = 'localhost', user = os.getenv("USER"))
+        trackhub.upload.upload_hub(hub = hub, host = 'localhost', user = os.getenv("USER"))
+        print 'Generated a trackhub at: {0}'.format(hub.url)
+        return hub.url
 
 
