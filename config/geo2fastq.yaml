@@ -29,7 +29,7 @@ aligner:
         ChIP-Seq: bwa
 
 # Command structure for the alignment wrapper. 
-#FIXME needs some more elegant solution
+#TODO needs some more elegant solution
 ALIGN_CMD: /opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}
 
 

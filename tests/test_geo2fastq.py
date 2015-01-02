@@ -2,6 +2,7 @@ from unittest import TestCase
 import geo2fastq
 from geo2fastq import Geo
 import os
+import urllib
 
 config = geo2fastq.config.config()
 
@@ -53,7 +54,7 @@ class TestClass(TestCase):
         
       
     def test_fastqs2bams(self):
-        g = Geo('GSE14025')
+        g = Geo('GSE14025') #TODO: test with a less exotic reference genome
         g.download()
         g.sras2fastqs(keep_sra = True)
         bams = g.fastqs2bams(config)
@@ -70,19 +71,48 @@ class TestClass(TestCase):
         for bw in bws:
             assert(os.path.exists(bw))
             
-#        
-#    def test_bam2bw(self):
-#        # depends on test_fastq2bam
-#        gse = 'GSE14025'
-#        g = Geo(gse)
-#        sample = g.samples[g.samples.keys()[1]]
-#        bam = 'GSE14025/GSM352202.H3K4me3_ChIPSeq.bam' 
-#        bw = bam.replace(".bam", ".bw")
-#        
-#        geo2fastq.convert.bam2bw(bam, bw, library=sample['library']) 
-#        assert(os.path.exists(bw))
     
-       
+    def test_generate_trackhub(self):
+        g = Geo('GSE14025')
+        g.download()
+        g.sras2fastqs(keep_sra = True)
+        g.fastqs2bams(config)
+        g.bams2bws()
+        url = g.generate_trackhub(config)
+        url_basename = url[0:url.rfind('/')]+'/'
+        hub_file = urllib.urlopen(url)
+        # check for correct gse:
+        gse = hub_file.readline().strip().split(' ')[1]
+        assert(g.gse == gse)
+        
+        # check genomes file
+        hublines = hub_file.readlines()
+        hub_file.close()
+        genomes_filename = hublines[2].strip().split(' ')[1]
+        genomes_file = urllib.urlopen(url_basename + genomes_filename)
+        genomeLines = genomes_file.readlines()
+        genomes_file.close()
+        
+        # check trackDb file
+        for genomeLine in genomeLines:
+            if genomeLine.startswith('trackDb '):
+                trackdb = genomeLine.strip().split(' ')[1]
+        trackdb_filename = trackdb[trackdb.rfind('/')+1:len(trackdb)]
+        trackdb_file = urllib.urlopen(url_basename + trackdb_filename)
+        
+        # check tracks
+        dataUrls = []
+        for line in trackdb_file.readline():
+            if line.startswith("bigDataUrl "):
+                dataUrls.apped(line.split(' ')[1])
+        trackdb_file.close()
+        for dataUrl in dataUrls:
+            dataHandle = urllib.urlopen(dataUrl)
+            dataHandle.close()
+        
+    
+        
+        
 
 
 

@@ -187,7 +187,7 @@ class Geo:
         return bws
 
 
-    def generate_trackhub(self, config, outdir):
+    def generate_trackhub(self, config, outdir='./'):
         hub_path = os.path.join(os.getenv('USER'), self.gse)
         hub_path_local =  os.path.join(outdir, self.gse)
         hub = trackhub.Hub(hub = self.gse,
@@ -220,7 +220,6 @@ class Geo:
         genomesFile.remote_fn = os.path.join(config['HUB_LOCALBASE'], hub_path, '{0}.genomes.txt'.format(self.gse))
         genomesFile.url       = os.path.join(config['HUB_URLBASE'],   hub_path, '{0}.genomes.txt'.format(self.gse))
         hub.add_genomes_file(genomesFile)
-        
         
         #upload tracks
         hub.render()
