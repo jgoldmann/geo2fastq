@@ -5,7 +5,7 @@
 
 # genome files ---------------------------
 
-#Path where you keep genome files #TODO: describe formats + sources
+#Path where you keep genome files
 genome_dir: /data/genomes 
 
 # Define, what genome assembly you want to use for what organism. Give 
@@ -29,7 +29,6 @@ aligner:
         ChIP-Seq: bwa
 
 # Command structure for the alignment wrapper. 
-#TODO needs some more elegant solution
 ALIGN_CMD: /opt/soladmin/current/script/soladmin_align.rb -i {0} -o {1} -g {2} -a {3} -r {4}
 
 
@@ -41,4 +40,6 @@ HUB_LOCALBASE: /mnt/trackhub/tmp/
 #internet path under which the trackhub directory will be accessible from outside
 HUB_URLBASE: http://trackhub.science.ru.nl/tmp/
 
+#email address of responsible person
+email: user@example.com
 

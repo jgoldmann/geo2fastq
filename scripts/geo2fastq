@@ -37,14 +37,14 @@ keep_sra    = args.keep_sra
 config = config()
 outdir = './'
 
-for gse, info in Geo.search(search_term).items():
+for gse, info in Geo.search(search_term, config).items():
     print "{0}\t{1}".format(gse, info['title'])
     for gsm,title in info['samples'].items():
         print "  {0}\t{1}".format(gsm, title)
     
     if download:
         
-        g = Geo(gse)            
+        g = Geo(gse, config)            
         g.download()
         g.check_sras()
         g.sras2fastqs(keep_sra, outdir)

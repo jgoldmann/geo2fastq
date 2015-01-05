@@ -18,14 +18,14 @@ FTP_ROOT = "ftp-trace.ncbi.nlm.nih.gov"
 
 
 class Geo:
-    def __init__(self, gse="", email=""):
+    def __init__(self, gse="", config):
         """ Create Geo object to search GEO and parse GEO experiment data
         
         :param gse: GEO accession or filehandle to GEO soft file
         :type accession: string or file
         """
         self.gse = gse
-        self.email = email
+        self.email = config['email']
         self.samples = {}
         if gse:
             try:
@@ -39,14 +39,14 @@ class Geo:
                 
 
     @classmethod
-    def search(self, term):
+    def search(self, term, config):
         """ Search NCBI GEO and return a dictionary of GEO accessions
         describing series (GSE) and samples (GSM).
         
         :param term: search term(s)
         :type term: string
         """
-        Entrez.email = "s.vanheeringen@ncmls.ru.nl"  #TODO: parameterize
+        Entrez.email = config['email']
         handle = Entrez.esearch("gds", term)
         record = Entrez.read(handle)
         results = {}

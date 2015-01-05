@@ -5,34 +5,30 @@ import os
 import urllib
 
 config = geo2fastq.config.config()
+test_gse = "GSE54401"
 
 # run tests with test debugging mode: nosetests --pdb tests/test_geo2fastq.py
 
 class TestClass(TestCase):
     def test_Geo_search(self):
-        gse = 'GSE14025'
-        for gse_out, info in Geo.search(gse).items():
-           #print "{0}\t{1}".format(gse, info['title'])
+        for gse_out, info in Geo.search(test_gse).items():
            assert(info['title'] == "A Hierarchy of H3K4me3 and H3K27me3 Acquisition in Spatial Gene Regulation in Xenopus Embryos")
            for gsm,title in info['samples'].items():
-               #print "  {0}\t{1}".format(gsm, title)
                assert(gsm.startswith('GSM'))
            assert(info['samples'].has_key("GSM352204"))
 
 
 
     def test_Geo_get_sample_info(self):
-        gse = 'GSE14025'
-        g = Geo(gse)
+        g = Geo(test_gse, config)
         
-        info = g.get_sample_info(gse)
+        info = g.get_sample_info(test_gse)
         for i in info:
             assert(i.name != '')
 
         
     def test_Geo_download(self):
-        gse = 'GSE14025'
-        g = Geo(gse)
+        g = Geo(test_gse, config)
         g.download()
         all_sras = []
         for sample in g.samples.values():
@@ -42,8 +38,7 @@ class TestClass(TestCase):
                 
        
     def test_sra2fastq(self):
-        gse = 'GSE14025'
-        g = Geo(gse)
+        g = Geo(test_gse, config)
         g.download()
         all_fastqs = []
         g.sras2fastqs(keep_sra=True)
@@ -54,7 +49,7 @@ class TestClass(TestCase):
         
       
     def test_fastqs2bams(self):
-        g = Geo('GSE14025') #TODO: test with a less exotic reference genome
+        g = Geo('GSE14025', config) 
         g.download()
         g.sras2fastqs(keep_sra = True)
         bams = g.fastqs2bams(config)
@@ -63,7 +58,7 @@ class TestClass(TestCase):
         
         
     def test_bams2bws(self):
-        g = Geo('GSE14025')
+        g = Geo('GSE14025', config)
         g.download()
         g.sras2fastqs(keep_sra = True)
         g.fastqs2bams(config)
@@ -73,7 +68,7 @@ class TestClass(TestCase):
             
     
     def test_generate_trackhub(self):
-        g = Geo('GSE14025')
+        g = Geo('GSE14025', config)
         g.download()
         g.sras2fastqs(keep_sra = True)
         g.fastqs2bams(config)
