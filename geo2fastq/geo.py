@@ -18,11 +18,13 @@ FTP_ROOT = "ftp-trace.ncbi.nlm.nih.gov"
 
 
 class Geo:
-    def __init__(self, gse="", config):
-        """ Create Geo object to search GEO and parse GEO experiment data
+    def __init__(self, gse="", config={}):
+        """ Create Geo object  to search GEO and parse GEO experiment data
         
         :param gse: GEO accession or filehandle to GEO soft file
         :type accession: string or file
+        :param config: a dictionary of configuration settings. must contain entry for "email".
+        :type accession: dictionary
         """
         self.gse = gse
         self.email = config['email']
